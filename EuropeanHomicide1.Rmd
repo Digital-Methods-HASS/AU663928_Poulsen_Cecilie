@@ -1,0 +1,157 @@
+---
+title: "Are we more civilized today?"
+author: "Adela Sobotkova and Cecilie Poulsen"
+date: "Created 4 October 2021, Updated `r format(Sys.time(), '%d %B %Y %H:%M')`" 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+This exercise is based on the dataset provided by [OurWorldInData project](https://ourworldindata.org/homicides) based at the Oxford University.
+
+## The long-term trend in Homicides in Western Europe
+
+Understanding how homicide rates have changed prior to the modern era requires the help of historians and archivists. Manuel Eisner, a criminology professor at the University of Cambridge, and his colleagues published the Historical Violence Database \href{https://cjrc.osu.edu/research/interdisciplinary/hvd}: a compilation of data on long-term trends in homicide rates, in addition to qualitative information such as the cause of death, perpetrator and victim. This database is limited to countries with relatively complete historical records on violence and crime – mainly Western Europe and the US.
+
+Starting in the second half of the nineteenth century, these European regions have consistent police records of those accused of murder or manslaughter and annual counts of homicide victims. To go back further in time, reaching as far back as the thirteenth century, Eisner collected estimates (from historical records of coroner reports, court trials, and the police) of homicide rates made in over ninety publications by scholars.5
+
+In the chart shown here we see long-run homicide rates for the five European regions.
+
+Homicide rates – measured as the number of homicides per 100,000 individuals – up to 1990 are sourced from Eisner’s (2003) publication and the Historical Violence Database. These estimates have been combined, from 1990 onwards, with homicide rates from the Global Burden of Disease study.6
+
+In the 1300s, homicide rates in Western Europe ranged from 23 to 56 homicides per 100,000 individuals, comparable to the current rates in Latin America. Homicide rates then fell dramatically in all five regions from the 1300s to 1800s. The magnitude of this decline was similar across countries: homicide rates fell between 78 and 98%.
+
+Homicide rates in Europe today are much lower than in the past. England, Germany, Switzerland, and Italy reached their lowest levels in the 2000s; while the Netherlands, Belgium, and Scandinavia reached their minimums in the mid to late 1900s.
+
+```{r library}
+library(tidyverse)
+```
+
+## Load the available data from ourworldindata.org
+
+You should always interrogate the source of your data. Who compiled it, from where, what is missing, how representative the data are? Check the data/Metadata document to learn about the data provenance.
+
+```{r data}
+library(readr)
+Western_Europe <- read_csv("Documents/AU/3 semester/Teoriorienteret/WEEK47/HomicideHistory-main/data/homicide-rates-across-western-europe.csv")
+```
+
+
+## Inspect the data
+
+How clean and analysis-ready is the dataset? Do you understand what the column names represent? What is the difference between rate and homicide number?
+
+```{r inspect}
+head(Western_Europe)
+```
+
+Note that the `echo = FALSE` parameter can be added to the code chunk to prevent printing of the R code that generated the plot.
+
+Now, that you have looked at what the data looks like and what it represents, let's see what big picture it contains.
+
+## The long-term trend in homicides
+```{r }
+Western_Europe<- rename(Western_Europe, homicides_per_100k = `Homicide rate in Europe over long-term (per 100,000) (homicides per 100,000 people)`)
+Western_Europe <- rename(Western_Europe, Country=Entity)
+ggplot(data = Western_Europe) +  
+  geom_line(mapping = aes(x = Year, y = Western_Europe$`homicides_per_100k`, 
+                           color = Country)) + 
+  labs(x = "Year",
+       y = "Number of Homicides per 100,000 people",
+       title = "Homicide rate in Europe from 1300-2000")+
+  theme(legend.position = "bottom")
+```
+Alright, the homicide rates are all descending over time. What a comfort. But the viz is not super clear. Let's check the rates for individual countries.
+
+## Homicides in individual countries
+
+```{r }
+ggplot(data = Western_Europe) + 
+  geom_line(mapping = aes(x = Year, 
+                           y = Western_Europe$`homicides_per_100k`, 
+                           color = Country)) +
+  facet_wrap(~ Country, nrow = 3, ncol=2) +
+  labs(x = "Year",
+       y = "Homicides per 100,000",
+       title = "Homicide rate in Western Europe from 1300-2000")+
+  theme(legend.position = "bottom")
+```
+
+## The trends in homicide with the pattern of reign duration among Danish rulers through time
+
+```{r}
+# YOUR CODE HERE: 
+library(readr)
+danish_monarchs <- read_delim("~/Documents/AU/3 semester/danish_monarchs.csv", 
+                                  delim = ";", escape_double = FALSE, trim_ws = TRUE)
+danish_monarchs <- danish_monarchs %>% 
+  mutate(midyear = reign_end_year -(reign_end_year-reign_start_year)/2) 
+ggplot(danish_monarchs, aes(x=midyear, y=reign_duration))+
+  geom_point()+
+  geom_smooth()+
+    labs(title="How long danish kings ruled over time", x="Year", y="Years they ruled")+
+  theme_bw()+
+  theme(text=element_text(size=14))
+  
+```
+
+
+## My Tasks:
+
+**1) the column name Western_Europe$`Homicide rate in Europe over long-term (per 100,000) is not very easy to work with. Relabel it to 'homicides_per_100k' inside R after loading the dataset and then edit all the ggplots.**
+To rename the column we will need to run this code:
+
+    Western_Europe<- rename(Western_Europe, homicides_per_100k = `Homicide rate in Europe over         long-term (per 100,000) (homicides per 100,000 people)`)
+
+The column is now called "homicides_per_100k"
+
+**2) The basic plot and following facet-plot (combination plot) is great, but geom_point - a scatterplot - is not the best choice for showing long-term data. Can you change both plots to more suitable type of rendering? **
+
+<li>To change the plot we will need to replace the geom_point function with the geom_line function. And remember to do it in both of the plots.</li>
+
+**3) Can you change the facet "layout" to two columns and three rows so that the trends are easier to see?**
+This is done by adding the "ncol" function to the facet_wrap: like this
+                      <li>facet_wrap(~ Country, nrow = 3, ncol=2)</li>
+
+**4) Move the legend from the current position on the side to below the facets, and label it "Country" instead of "Entity".**
+
+To do this we will need to rename the legend called Entity with this function:
+                      <li>Western_Europe <- rename(Western_Europe, Country=Entity)</li>
+Then we will need to add the theme() function, and have it positioned at the bottom:
+                    <li>theme(legend.position = "bottom")</li>
+Next step is to replace all the "Entity" with Country manually. <br>
+
+**5) Add a floating table of contents to your Rmarkdown document, provide informative chunk-names to all your R chunks, and automatically generate a timestamp to show when the document was last updated. (Hint: check the Rmarkdown episode in our Data Carpentry tutorial)**
+
+This is done simply by entering this at the very top of the document:
+
+<li>title: "Are we more civilized today?" <br>
+author: "Adela Sobotkova and Cecilie Poulsen" <br>
+date: "Created 4 October 2021, Updated `r format(Sys.time(), '%d %B %Y %H:%M')`" <br>
+output: <br>
+  html_document: <br>
+    toc: true <br>
+    toc_float: true </li>
+
+
+This is the function for the automatically generated timestamp: 
+<li> `r format(Sys.time(), '%d %B %Y %H:%M' </li>
+
+And this is the function for the floating table: <br>
+
+output: <br>
+  html_document: <br>
+    toc: true <br>
+    toc_float: true 
+
+**6) Fill in the empty code chunk with a ggplot of your Danish kings: loading the data, calculating the mid-year, and plotting the duration of reign (y axis) over the mid-year  (x axis), using geom_smooth()**
+
+I will refer to the section called "The trends in homicide with the pattern of reign duration among Danish rulers through time" to see how that was done.
+
+**7) Comment briefly what is your opinion on the basis of the data visualisations: are we more civilized today?**
+
+<li>We are definitely more civilized today. As we can see in the graphs countries like Italy has really declined in numbers of homicide. The 13- and 1400s Italy really peaked in the number of homicides, which can mean that they were not very civilized, and now the numbers are similar to the rest of Europe (or more precisely the other countries that are represented in the graphs). I would say that we are definitely more civilized today. </li>
